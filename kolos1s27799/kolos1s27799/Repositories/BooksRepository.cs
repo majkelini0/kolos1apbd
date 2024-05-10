@@ -113,11 +113,56 @@ public class BooksRepository : IBooksRepository
         await connection.OpenAsync();
         SqlTransaction transaction = connection.BeginTransaction();
 
+        
+        
         try
         {
+            // 1. Adding book
+            var query = "INSERT INTO books VALUES (@title); SELECT @@IDENTITY AS ID;";
+            using SqlCommand command = new SqlCommand(query);
+            command.Connection = connection;
+            command.Transaction = transaction;
+            
+            command.Parameters.AddWithValue("@title", bookAuthors.title);
+            var bookId = await command.ExecuteScalarAsync();
+
+            int res = Convert.ToInt32(bookId);
             
             
-            
+            int authorId;
+            // 2. Adding authors
+            foreach (var author in bookAuthors.authors)
+            {
+                
+                query = "SELECT PK FROM authors WHERE first_name = @firstName AND last_name = @lastName";
+                using SqlCommand checkAuthorCommand = new SqlCommand(query);
+                command.Parameters.Clear();
+                command.Parameters.AddWithValue("@firstName", author.firstName);
+                command.Parameters.AddWithValue("@lastName", author.lastName);
+                var result = await command.ExecuteScalarAsync();
+
+                if (result is null)
+                {
+                    query = "INSERT INTO authors (first_name, last_name) VALUES (@firstName, @lastName); SELECT @@IDENTITY AS ID;";
+                    using SqlCommand addAuthorCommand = new SqlCommand(query);
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@firstName", author.firstName);
+                    command.Parameters.AddWithValue("@lastName", author.lastName);
+                    authorId = (int) await addAuthorCommand.ExecuteScalarAsync();
+                }
+                else
+                {
+                    authorId = (int)result;
+                }
+
+                // 3. Update books_authors table
+                query = "INSERT INTO books_authors (FK_book, FK_author) VALUES (@bookId, @authorId)";
+                using SqlCommand linkBookAuthorCommand = new SqlCommand(query);
+                command.Parameters.Clear();
+                command.Parameters.AddWithValue("@bookId", res);
+                command.Parameters.AddWithValue("@authorId", authorId);
+                await linkBookAuthorCommand.ExecuteNonQueryAsync();
+            }
         }
         catch
         {
@@ -125,9 +170,9 @@ public class BooksRepository : IBooksRepository
             return null;
         }
         
-        
-        
-        
-        throw new NotImplementedException();
+        return new BookAuthorsWithId()
+        {
+            id = authorId
+        }
     }
 }
