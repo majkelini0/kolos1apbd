@@ -1,3 +1,5 @@
+using System.Net;
+using kolos1s27799.Models.DTOs;
 using kolos1s27799.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,11 +24,11 @@ public class BooksController : ControllerBase
         {
             return NotFound("Book doesn't exist");
         }
-        
-        
-        
-        
-        
-        return Ok();
+        BookAuthorsWithId book = await _booksRepository.GetBookWithAuthors(id);
+        if (book is null)
+        {
+            return StatusCode((int)HttpStatusCode.NoContent, "Something went wrong. No content was returned");
+        }
+        return Ok(book);
     }
 }
