@@ -183,6 +183,8 @@ public class BooksRepository : IBooksRepository
             return null;
         }
 
+        transaction.Commit();
+        
         return newBook;
     }
 }
