@@ -113,8 +113,8 @@ public class BooksRepository : IBooksRepository
         await connection.OpenAsync();
         SqlTransaction transaction = connection.BeginTransaction();
 
-        
-        
+
+        BookAuthorsWithId newBook = new BookAuthorsWithId();
         try
         {
             // 1. Adding book
@@ -140,6 +140,12 @@ public class BooksRepository : IBooksRepository
                 command.Parameters.AddWithValue("@firstName", author.firstName);
                 command.Parameters.AddWithValue("@lastName", author.lastName);
                 var result = await command.ExecuteScalarAsync();
+                
+                newBook.authors.Add(new Author()
+                {
+                    firstName = author.firstName,
+                    lastName = author.lastName
+                });
 
                 if (result is null)
                 {
@@ -153,6 +159,7 @@ public class BooksRepository : IBooksRepository
                 else
                 {
                     authorId = (int)result;
+                    
                 }
 
                 // 3. Update books_authors table
@@ -162,6 +169,11 @@ public class BooksRepository : IBooksRepository
                 command.Parameters.AddWithValue("@bookId", res);
                 command.Parameters.AddWithValue("@authorId", authorId);
                 await linkBookAuthorCommand.ExecuteNonQueryAsync();
+                
+                
+                newBook.id = authorId;
+                newBook.title = bookAuthors.title;
+                
             }
         }
         catch
@@ -169,10 +181,7 @@ public class BooksRepository : IBooksRepository
             transaction.Rollback();
             return null;
         }
-        
-        return new BookAuthorsWithId()
-        {
-            id = authorId
-        }
+
+        return newBook;
     }
 }
