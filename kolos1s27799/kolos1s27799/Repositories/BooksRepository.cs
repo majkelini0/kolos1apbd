@@ -175,6 +175,7 @@ public class BooksRepository : IBooksRepository
                 newBook.title = bookAuthors.title;
                 
             }
+            transaction.Commit();
         }
         catch
         {
