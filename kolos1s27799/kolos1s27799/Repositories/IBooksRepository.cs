@@ -6,4 +6,6 @@ public interface IBooksRepository
 {
     Task<bool> DoesBookExist(int id);
     Task<BookAuthorsWithId> GetBookWithAuthors(int id);
+    Task<bool> DoesBookExist(string title);
+    Task<BookAuthorsWithId> AddBook(BookAuthors bookAuthors);
 }

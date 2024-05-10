@@ -1,3 +1,4 @@
+using System.Net;
 using kolos1s27799.Models.DTOs;
 using Microsoft.Data.SqlClient;
 
@@ -20,6 +21,26 @@ public class BooksRepository : IBooksRepository
         
         command.CommandText = "SELECT 1 FROM books WHERE PK = @id";
         command.Parameters.AddWithValue("@id", id);
+        
+        await connection.OpenAsync();
+        var res = await command.ExecuteScalarAsync();
+        
+        if(res is not null)
+        {
+            return true;
+        }
+        
+        return false;
+    }
+
+    public async Task<bool> DoesBookExist(string title)
+    {
+        using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
+        using SqlCommand command = new SqlCommand();
+        command.Connection = connection;
+        
+        command.CommandText = "SELECT 1 FROM books WHERE title = @title";
+        command.Parameters.AddWithValue("@title", title);
         
         await connection.OpenAsync();
         var res = await command.ExecuteScalarAsync();
@@ -84,5 +105,29 @@ public class BooksRepository : IBooksRepository
         }
 
         return book;
+    }
+
+    public async Task<BookAuthorsWithId> AddBook(BookAuthors bookAuthors)
+    {
+        using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
+        await connection.OpenAsync();
+        SqlTransaction transaction = connection.BeginTransaction();
+
+        try
+        {
+            
+            
+            
+        }
+        catch
+        {
+            transaction.Rollback();
+            return null;
+        }
+        
+        
+        
+        
+        throw new NotImplementedException();
     }
 }
